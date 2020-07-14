@@ -1,4 +1,6 @@
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const config = require('../config')[process.env.ENV]
 
 const _ = {}
 
@@ -11,8 +13,10 @@ _.comparePassword = (password, hash) => {
   return bcrypt.compareSync(password, hash)
 }
 
-_.getJWT = (userType, payload) => {
-  return jwt.sign(payload, config.private_key)
+_.getJWT = (payload) => {
+  return jwt.sign(payload, config.PRIVATE_KEY, {
+    expiresIn: payload.type === 'admin' ? '12h' : '30d',
+  })
 }
 
 module.exports = _

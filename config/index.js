@@ -1,4 +1,5 @@
 require('dotenv').config()
+const fs = require('fs')
 
 const {
   ENV,
@@ -15,6 +16,7 @@ const appConfig = {
   ENV,
   LOCALE,
   PORT,
+  PRIVATE_KEY: fs.readFileSync(__dirname + '/private.key'),
 }
 
 const dbConfig = {
