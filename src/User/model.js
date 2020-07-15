@@ -80,20 +80,18 @@ class UserClass {
     }
   }
 
-  static async findById(id) {
-    const user = await User.findByPk(id)
-    const userObj = new UserClass({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      password: user.password,
-      hash: false,
+  static async find(query) {
+    const user = await User.findOne({
+      where: {
+        [Op.or]: {
+          email: query,
+          id: query,
+        },
+      },
+      raw: true,
     })
-    return userObj
-  }
+    if (!user) return null
 
-  static async findByEmail(email) {
-    const user = await User.findOne({ where: { email }, raw: true })
     const userObj = new UserClass({
       id: user.id,
       name: user.name,

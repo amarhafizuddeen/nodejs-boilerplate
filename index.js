@@ -4,6 +4,7 @@ const express = require('express')
 const morgan = require('morgan')
 const config = require('./config')[process.env.ENV]
 const routes = require('./routes')
+require('./helpers/errors')
 
 const app = express()
 

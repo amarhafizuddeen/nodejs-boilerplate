@@ -40,7 +40,7 @@ module.exports = {
   checkAdminAuth: async (req, res, next) => {
     try {
       req.decoded = await checkAuth(req, 'admin')
-      req.admin = await Admin.findById(req.decoded.id)
+      req.admin = await Admin.find(req.decoded.id)
       next()
     } catch (error) {
       console.log(error)
@@ -50,7 +50,7 @@ module.exports = {
   checkUserAuth: async (req, res, next) => {
     try {
       req.decoded = await checkAuth(req, 'user')
-      req.admin = await User.findById(req.decoded.id)
+      req.admin = await User.find(req.decoded.id)
       next()
     } catch (error) {
       console.log(error)

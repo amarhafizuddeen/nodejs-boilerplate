@@ -7,35 +7,39 @@ const User = require('./model')
 
 module.exports = {
   createUser: async (req, res) => {
-    const { name, email, password } = req.body
+    try {
+      const { name, email, password } = req.body
 
-    if (!name || !email || !password) {
-      return res.status(400).send('Missing required fields')
+      if (!name || !email || !password)
+        throw new ValidationError('Missing required fields', 'field error')
+
+      if (await User.emailExist(email))
+        throw new DuplicateEmailError('Email unavailable', 'email error')
+
+      const user = new User({ ...req.body, hash: true })
+      const result = await user.save()
+      return result.error ? res.status(500).send(result.error) : res.sendStatus(200)
+    } catch (error) {
+      return res.status(400).send(error.message)
     }
-
-    if (await User.emailExist(email)) {
-      return res.status(400).send('Email unavailable')
-    }
-
-    const user = new User({ ...req.body, hash: true })
-    const result = await user.save()
-    return result.error ? res.status(500).send(result.error) : res.sendStatus(200)
   },
   login: async (req, res) => {
-    const { email, password } = req.body
+    try {
+      const { email, password } = req.body
 
-    if (!email || !password) {
-      return res.status(400).send('Missing required fields')
+      if (!email || !password) throw new ValidationError('Missing required fields', 'field error')
+
+      const user = await User.findByEmail(email)
+      if (!user) throw new CredentialError('Invalid credentials', 'email error')
+      if (!(await user.comparePassword(password)))
+        throw new CredentialError('Invalid credentials', 'wrong password error')
+
+      const token = await user.getToken()
+
+      return res.json({ token })
+    } catch (error) {
+      return res.status(400).send(error.message)
     }
-
-    const user = await User.findByEmail(email)
-    if (!(await user.comparePassword(password))) {
-      return res.status(400).send('Invalid credentials')
-    }
-
-    const token = await user.getToken()
-
-    return res.json({ token })
   },
   viewUser: async (req, res) => {
     return res.send(await User.view())

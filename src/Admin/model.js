@@ -3,7 +3,8 @@ const { Admin } = require('../../db/models')
 const Op = require('sequelize').Op
 
 class AdminClass {
-  constructor({ name = null, email = null, password = null, hash = true }) {
+  constructor({ id = null, name = null, email = null, password = null, hash = true }) {
+    this.id = id
     this.name = name
     this.email = email
     this.password = !password ? null : hash ? hashPassword(password) : password
@@ -21,6 +22,10 @@ class AdminClass {
 
   async comparePassword(password) {
     return comparePassword(password, this.password)
+  }
+
+  hidePassword() {
+    delete this.password
   }
 
   static async emailExist(email, id = null) {
@@ -80,20 +85,18 @@ class AdminClass {
     }
   }
 
-  static async findById(id) {
-    const admin = await Admin.findByPk(id)
-    const adminObj = new AdminClass({
-      id: admin.id,
-      name: admin.name,
-      email: admin.email,
-      password: admin.password,
-      hash: false,
+  static async find(query) {
+    const admin = await Admin.findOne({
+      where: {
+        [Op.or]: {
+          email: query,
+          id: query,
+        },
+      },
+      raw: true,
     })
-    return adminObj
-  }
+    if (!admin) return null
 
-  static async findByEmail(email) {
-    const admin = await Admin.findOne({ where: { email }, raw: true })
     const adminObj = new AdminClass({
       id: admin.id,
       name: admin.name,
