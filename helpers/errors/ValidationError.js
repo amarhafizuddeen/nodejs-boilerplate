@@ -1,6 +1,6 @@
-class ValidationError extends Error {
+class ValidationError extends ControllerError {
   constructor(message, type) {
-    super(message)
+    super(message, 400)
     this.name = 'ValidationError'
     this.type = type
   }

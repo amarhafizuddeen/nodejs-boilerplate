@@ -1,6 +1,6 @@
-class CredentialError extends Error {
+class CredentialError extends ControllerError {
   constructor(message, type) {
-    super(message)
+    super(message, 401)
     this.name = 'CredentialError'
     this.type = type
   }

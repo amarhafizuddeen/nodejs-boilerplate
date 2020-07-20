@@ -10,13 +10,8 @@ class UserClass {
   }
 
   async save() {
-    try {
-      await User.create({ ...this })
-      return { message: 'Created user' }
-    } catch (error) {
-      console.log(error)
-      return { error }
-    }
+    await User.create({ ...this })
+    return { message: 'Created user' }
   }
 
   async comparePassword(password) {
@@ -37,47 +32,30 @@ class UserClass {
   }
 
   static async view() {
-    try {
-      return await User.findAll({
-        attributes: {
-          exclude: ['password'],
-        },
-      })
-    } catch (error) {
-      console.log(error)
-    }
+    return await User.findAll({
+      attributes: {
+        exclude: ['password'],
+      },
+    })
   }
 
   static async viewById(id) {
-    try {
-      return await User.findByPk(id, {
-        attributes: {
-          exclude: ['password'],
-        },
-      })
-    } catch (error) {
-      console.log(error)
-    }
+    return await User.findByPk(id, {
+      attributes: {
+        exclude: ['password'],
+      },
+    })
   }
 
   static async update(id, data) {
-    try {
-      const user = await this.viewById(id)
-      if (data.password) data.password = hashPassword(data.password)
-      await user.update(data, { where: { id } })
-      return { message: 'Updated user' }
-    } catch (error) {
-      console.log(error)
-      return { error }
-    }
+    const user = await this.viewById(id)
+    if (data.password) data.password = hashPassword(data.password)
+    await user.update(data, { where: { id } })
+    return { message: 'Updated user' }
   }
 
   static async delete(id) {
-    try {
-      return await User.destroy({ where: { id } })
-    } catch (error) {
-      return error
-    }
+    return await User.destroy({ where: { id } })
   }
 
   static async find(query) {

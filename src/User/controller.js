@@ -6,7 +6,7 @@
 const User = require('./model')
 
 module.exports = {
-  createUser: async (req, res) => {
+  createUser: async (req, res, next) => {
     try {
       const { name, email, password } = req.body
 
@@ -17,13 +17,13 @@ module.exports = {
         throw new DuplicateEmailError('Email unavailable', 'email error')
 
       const user = new User({ ...req.body, hash: true })
-      const result = await user.save()
-      return result.error ? res.status(500).send(result.error) : res.sendStatus(200)
+      await user.save()
+      return res.sendStatus(200)
     } catch (error) {
-      return res.status(400).send(error.message)
+      next(error)
     }
   },
-  login: async (req, res) => {
+  login: async (req, res, next) => {
     try {
       const { email, password } = req.body
 
@@ -38,28 +38,28 @@ module.exports = {
 
       return res.json({ token })
     } catch (error) {
-      return res.status(400).send(error.message)
+      next(error)
     }
   },
-  viewUser: async (req, res) => {
+  viewUser: async (req, res, next) => {
     return res.send(await User.view())
   },
-  viewUserById: async (req, res) => {
+  viewUserById: async (req, res, next) => {
     const user = await User.find(req.params.id)
     if (!user) return res.sendStatus(404)
     user.hidePassword()
     return res.send(user)
   },
-  updateUser: async (req, res) => {
+  updateUser: async (req, res, next) => {
     if (req.body.email && (await User.emailExist(req.body.email, req.params.id))) {
       return res.status(400).send('Email unavailable')
     }
 
-    const result = await User.update(req.params.id, req.body)
-    return result.error ? res.status(500).send(result.error) : res.sendStatus(200)
+    await User.update(req.params.id, req.body)
+    return res.sendStatus(200)
   },
-  deleteUser: async (req, res) => {
-    const result = await User.delete(req.params.id)
-    return result.error ? res.status(500).send(result.error) : res.sendStatus(200)
+  deleteUser: async (req, res, next) => {
+    await User.delete(req.params.id)
+    return res.sendStatus(200)
   },
 }

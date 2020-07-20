@@ -42,15 +42,11 @@ class AdminClass {
   }
 
   static async view() {
-    try {
-      return await Admin.findAll({
-        attributes: {
-          exclude: ['password'],
-        },
-      })
-    } catch (error) {
-      console.log(error)
-    }
+    return await Admin.findAll({
+      attributes: {
+        exclude: ['password'],
+      },
+    })
   }
 
   static async viewById(id) {
@@ -66,23 +62,13 @@ class AdminClass {
   }
 
   static async update(id, data) {
-    try {
-      const admin = await this.viewById(id)
-      if (data.password) data.password = hashPassword(data.password)
-      await admin.update(data, { where: { id } })
-      return { message: 'Updated admin' }
-    } catch (error) {
-      console.log(error)
-      return { error }
-    }
+    const admin = await this.viewById(id)
+    if (data.password) data.password = hashPassword(data.password)
+    await admin.update(data, { where: { id } })
   }
 
   static async delete(id) {
-    try {
-      return await Admin.destroy({ where: { id } })
-    } catch (error) {
-      return error
-    }
+    return await Admin.destroy({ where: { id } })
   }
 
   static async find(query) {

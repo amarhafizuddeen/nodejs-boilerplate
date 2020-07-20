@@ -6,7 +6,7 @@
 const Admin = require('./model')
 
 module.exports = {
-  createAdmin: async (req, res) => {
+  createAdmin: async (req, res, next) => {
     try {
       const { name, email, password } = req.body
 
@@ -16,13 +16,13 @@ module.exports = {
         throw new DuplicateEmailError('Email unavailable', 'email error')
 
       const admin = new Admin({ ...req.body, hash: true })
-      const result = await admin.save()
-      return result.error ? res.status(500).send(result.error) : res.sendStatus(200)
+      await admin.save()
+      return res.sendStatus(200)
     } catch (error) {
-      return res.status(400).send(error.message)
+      next(error)
     }
   },
-  login: async (req, res) => {
+  login: async (req, res, next) => {
     try {
       const { email, password } = req.body
 
@@ -37,31 +37,31 @@ module.exports = {
 
       return res.json({ token })
     } catch (error) {
-      return res.status(400).send(error.message)
+      next(error)
     }
   },
-  viewAdmin: async (req, res) => {
+  viewAdmin: async (req, res, next) => {
     return res.send(await Admin.view())
   },
-  viewAdminById: async (req, res) => {
+  viewAdminById: async (req, res, next) => {
     const admin = await Admin.find(req.params.id)
     if (!admin) return res.sendStatus(404)
     admin.hidePassword()
     return res.send(admin)
   },
-  updateAdmin: async (req, res) => {
+  updateAdmin: async (req, res, next) => {
     try {
       if (req.body.email && (await Admin.emailExist(req.body.email, req.params.id)))
         throw new DuplicateEmailError('Email unavailable', 'email error')
 
-      const result = await Admin.update(req.params.id, req.body)
-      return result.error ? res.status(500).send(result.error) : res.sendStatus(200)
+      await Admin.update(req.params.id, req.body)
+      return res.sendStatus(200)
     } catch (error) {
-      return res.status(400).send(error.message)
+      next(error)
     }
   },
-  deleteAdmin: async (req, res) => {
-    const result = await Admin.delete(req.params.id)
-    return result.error ? res.status(500).send(result.error) : res.sendStatus(200)
+  deleteAdmin: async (req, res, next) => {
+    await Admin.delete(req.params.id)
+    return res.sendStatus(200)
   },
 }
