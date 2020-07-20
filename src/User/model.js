@@ -74,7 +74,7 @@ class UserClass {
 
   static async delete(id) {
     try {
-      return await User.delete({ where: { id } })
+      return await User.destroy({ where: { id } })
     } catch (error) {
       return error
     }

@@ -45,6 +45,7 @@ module.exports = {
   },
   viewAdminById: async (req, res) => {
     const admin = await Admin.find(req.params.id)
+    if (!admin) return res.sendStatus(404)
     admin.hidePassword()
     return res.send(admin)
   },

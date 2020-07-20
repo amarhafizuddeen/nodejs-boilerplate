@@ -79,7 +79,7 @@ class AdminClass {
 
   static async delete(id) {
     try {
-      return await Admin.delete({ where: { id } })
+      return await Admin.destroy({ where: { id } })
     } catch (error) {
       return error
     }

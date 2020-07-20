@@ -27,7 +27,10 @@ fs.readdirSync(srcDir).forEach((folder) => {
 })
 
 router.get('/', (req, res) => {
-  return res.send('API server is up and running!')
+  return res.send(
+    'API server is up and running! Head over to <a href="/docs">the API docs</a> to learn more.'
+  )
 })
 
 module.exports = router
+router.use(require('./swagger'))

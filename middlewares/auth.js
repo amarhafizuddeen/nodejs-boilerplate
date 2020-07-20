@@ -18,6 +18,7 @@ const verifyJWT = async (token) => {
 const checkAuth = async (req, type = null) => {
   let token = req.headers['authorization']
   if (!token) throw new Error('Missing Token')
+  token = token.replace('Bearer ', '')
 
   const verified = await verifyJWT(token)
   if (verified.error) throw new Error('Invalid Token')

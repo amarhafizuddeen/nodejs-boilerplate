@@ -29,7 +29,7 @@ module.exports = {
 
       if (!email || !password) throw new ValidationError('Missing required fields', 'field error')
 
-      const user = await User.findByEmail(email)
+      const user = await User.find(email)
       if (!user) throw new CredentialError('Invalid credentials', 'email error')
       if (!(await user.comparePassword(password)))
         throw new CredentialError('Invalid credentials', 'wrong password error')
@@ -45,7 +45,10 @@ module.exports = {
     return res.send(await User.view())
   },
   viewUserById: async (req, res) => {
-    return res.send(await User.viewById(req.params.id))
+    const user = await User.find(req.params.id)
+    if (!user) return res.sendStatus(404)
+    user.hidePassword()
+    return res.send(user)
   },
   updateUser: async (req, res) => {
     if (req.body.email && (await User.emailExist(req.body.email, req.params.id))) {
