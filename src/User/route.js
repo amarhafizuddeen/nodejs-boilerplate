@@ -7,16 +7,18 @@
 
 const router = require('express').Router()
 const {
+  aboutme,
   viewUser,
   viewUserById,
-  createUser,
+  registerUser,
   login,
+  updateProfile,
   updateUser,
   deleteUser,
 } = require('./controller')
 const path = require('path')
 const appPath = path.dirname(require.main.filename)
-const { checkAdminAuth } = require(appPath + '/middlewares/auth')
+const { checkAdminAuth, checkUserAuth } = require(appPath + '/middlewares/auth')
 
 /**
  * @swagger
@@ -34,6 +36,27 @@ const { checkAdminAuth } = require(appPath + '/middlewares/auth')
  *                $ref: '#/components/schemas/User'
  */
 router.get('', viewUser)
+
+/**
+ * @swagger
+ * path:
+ *  /user/aboutme:
+ *    get:
+ *      summary: View user's own profile
+ *      tags: [Users]
+ *      security:
+ *        - bearerAuth: []
+ *      responses:
+ *        "200":
+ *          description: An user object
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#/components/schemas/User'
+ *        "404":
+ *          description: User with the id provided does not exist
+ */
+router.get('/aboutme', checkUserAuth, aboutme)
 
 /**
  * @swagger
@@ -66,10 +89,8 @@ router.get('/:id', viewUserById)
  * path:
  *  /user/:
  *    post:
- *      summary: Create a new user
+ *      summary: User registration
  *      tags: [Users]
- *      security:
- *        - bearerAuth: []
  *      requestBody:
  *        required: true
  *        content:
@@ -84,7 +105,7 @@ router.get('/:id', viewUserById)
  *              schema:
  *                $ref: '#/components/schemas/User'
  */
-router.post('', checkAdminAuth, createUser)
+router.post('', registerUser)
 
 /**
  * @swagger
@@ -100,13 +121,34 @@ router.post('', checkAdminAuth, createUser)
  *            schema:
  *              $ref: '#/components/schemas/User'
  *            example:
- *              email: user@mail.com
- *              password: "12345678"
+ *              email: johnsmith@email.com
+ *              password: supersafepassword
  *      responses:
  *        "200":
  *          description: A JWT token
  */
 router.post('/login', login)
+
+/**
+ * @swagger
+ * path:
+ *  /user/profile:
+ *    put:
+ *      summary: Update User Profile
+ *      tags: [Users]
+ *      security:
+ *        - bearerAuth: []
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/User'
+ *      responses:
+ *        "200":
+ *          description: Update successful
+ */
+router.put('/profile', checkUserAuth, updateProfile)
 
 /**
  * @swagger
@@ -130,15 +172,11 @@ router.post('/login', login)
  *          application/json:
  *            schema:
  *              $ref: '#/components/schemas/User'
- *            example:
- *              name: New Name
- *              email: new@mail.com
- *              password: newpassword
  *      responses:
  *        "200":
  *          description: Update successful
  */
-router.put('/:id', checkAdminAuth, updateUser)
+router.put('/:id', checkAdminAuth(['general']), updateUser)
 
 /**
  * @swagger
@@ -160,7 +198,7 @@ router.put('/:id', checkAdminAuth, updateUser)
  *        "200":
  *          description: Deletion successful
  */
-router.delete('/:id', checkAdminAuth, deleteUser)
+router.delete('/:id', checkAdminAuth(['super']), deleteUser)
 
 module.exports = {
   name: 'user',

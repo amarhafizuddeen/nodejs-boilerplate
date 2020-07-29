@@ -9,10 +9,12 @@ const router = require('express').Router()
 const {
   viewAdmin,
   viewAdminById,
+  aboutme,
   createAdmin,
   login,
   updateAdmin,
   deleteAdmin,
+  createSuperAdmin,
 } = require('./controller')
 const path = require('path')
 const appPath = path.dirname(require.main.filename)
@@ -35,7 +37,28 @@ const { checkAdminAuth } = require(appPath + '/middlewares/auth')
  *              schema:
  *                $ref: '#/components/schemas/Admin'
  */
-router.get('', checkAdminAuth, viewAdmin)
+router.get('', checkAdminAuth(['general']), viewAdmin)
+
+/**
+ * @swagger
+ * path:
+ *  /admin/aboutme:
+ *    get:
+ *      summary: View admin's own profile
+ *      tags: [Admins]
+ *      security:
+ *        - bearerAuth: []
+ *      responses:
+ *        "200":
+ *          description: An admin object
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#/components/schemas/Admin'
+ *        "404":
+ *          description: Admin with the id provided does not exist
+ */
+router.get('/aboutme', checkAdminAuth(['general']), aboutme)
 
 /**
  * @swagger
@@ -63,7 +86,7 @@ router.get('', checkAdminAuth, viewAdmin)
  *        "404":
  *          description: Admin with the id provided does not exist
  */
-router.get('/:id', checkAdminAuth, viewAdminById)
+router.get('/:id', checkAdminAuth(['general']), viewAdminById)
 
 /**
  * @swagger
@@ -84,7 +107,7 @@ router.get('/:id', checkAdminAuth, viewAdminById)
  *        "200":
  *          description: Admin created successfully
  */
-router.post('', checkAdminAuth, createAdmin)
+router.post('', checkAdminAuth(['super']), createAdmin)
 
 /**
  * @swagger
@@ -100,8 +123,8 @@ router.post('', checkAdminAuth, createAdmin)
  *            schema:
  *              $ref: '#/components/schemas/Admin'
  *            example:
- *              email: admin@mail.com
- *              password: "12345678"
+ *              email: johnsmith@email.com
+ *              password: supersafepassword
  *      responses:
  *        "200":
  *          description: A JWT token
@@ -131,14 +154,17 @@ router.post('/login', login)
  *            schema:
  *              $ref: '#/components/schemas/Admin'
  *            example:
- *              name: New Name
- *              email: new@mail.com
+ *              firstName: James
+ *              lastName: Doe
+ *              email: jamesdoe@mail.com
  *              password: newpassword
+ *              type: general
+ *              isHead: false
  *      responses:
  *        "200":
  *          description: Update successful
  */
-router.put('/:id', checkAdminAuth, updateAdmin)
+router.put('/:id', checkAdminAuth(['super']), updateAdmin)
 
 /**
  * @swagger
@@ -159,8 +185,37 @@ router.put('/:id', checkAdminAuth, updateAdmin)
  *      responses:
  *        "200":
  *          description: Deletion successful
+ *        "404":
+ *          description: Admin with the id provided does not exist
  */
-router.delete('/:id', checkAdminAuth, deleteAdmin)
+router.delete('/:id', checkAdminAuth(['super']), deleteAdmin)
+
+// TODO: Remove this
+/**
+ * @swagger
+ * path:
+ *  /admin/super:
+ *    post:
+ *      summary: Create a super admin
+ *      tags: [Admins]
+ *      security:
+ *        - bearerAuth: []
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/Admin'
+ *            example:
+ *              firstName: Super
+ *              lastName: Admin
+ *              email: admin@mail.com
+ *              password: admin123
+ *      responses:
+ *        "200":
+ *          description: Super Admin created successfully
+ */
+router.post('/super', createSuperAdmin)
 
 module.exports = {
   name: 'admin',

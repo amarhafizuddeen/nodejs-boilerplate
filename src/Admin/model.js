@@ -3,20 +3,42 @@ const { Admin } = require('../../db/models')
 const Op = require('sequelize').Op
 
 class AdminClass {
-  constructor({ id = null, name = null, email = null, password = null, hash = true }) {
-    this.id = id
-    this.name = name
+  constructor({
+    id = null,
+    firstName = null,
+    lastName = null,
+    email = null,
+    password = null,
+    isActive = true,
+    type = 'general',
+    isHead = false,
+    createdAt = null,
+    updatedAt = null,
+    deletedAt = null,
+    hash = true,
+  }) {
+    // Required
+    this.firstName = firstName
+    this.lastName = lastName
     this.email = email
     this.password = !password ? null : hash ? hashPassword(password) : password
+
+    // Optional with default values
+    id ? (this.id = id) : null
+    this.isActive = isActive
+    this.type = type
+    this.isHead = isHead
+    this.createdAt = createdAt
+    this.updatedAt = updatedAt
+    this.deletedAt = deletedAt
   }
 
   async save() {
     try {
       await Admin.create({ ...this })
-      return { message: 'Created admin' }
+      return
     } catch (error) {
-      console.log(error)
-      return { error }
+      return error.errors
     }
   }
 
@@ -38,11 +60,17 @@ class AdminClass {
       id: this.id,
       email: this.email,
       type: 'admin',
+      role: this.type,
     })
   }
 
   static async view() {
     return await Admin.findAll({
+      where: {
+        type: {
+          [Op.not]: 'super',
+        },
+      },
       attributes: {
         exclude: ['password'],
       },
@@ -62,13 +90,25 @@ class AdminClass {
   }
 
   static async update(id, data) {
-    const admin = await this.viewById(id)
-    if (data.password) data.password = hashPassword(data.password)
-    await admin.update(data, { where: { id } })
+    try {
+      const admin = await this.viewById(id)
+      if (data.password) data.password = hashPassword(data.password)
+      await admin.update(data, { where: { id } })
+      return
+    } catch (error) {
+      return error.errors
+    }
   }
 
   static async delete(id) {
-    return await Admin.destroy({ where: { id } })
+    return await Admin.destroy({
+      where: {
+        id,
+        type: {
+          [Op.not]: 'super',
+        },
+      },
+    })
   }
 
   static async find(query) {
@@ -85,9 +125,16 @@ class AdminClass {
 
     const adminObj = new AdminClass({
       id: admin.id,
-      name: admin.name,
+      firstName: admin.firstName,
+      lastName: admin.lastName,
       email: admin.email,
       password: admin.password,
+      isActive: admin.isActive,
+      type: admin.type,
+      isHead: admin.isHead,
+      createdAt: admin.createdAt,
+      updatedAt: admin.updatedAt,
+      deletedAt: admin.deletedAt,
       hash: false,
     })
     return adminObj

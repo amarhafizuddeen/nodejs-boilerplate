@@ -3,19 +3,49 @@ const { User } = require('../../db/models')
 const Op = require('sequelize').Op
 
 class UserClass {
-  constructor({ name = null, email = null, password = null, hash = true }) {
-    this.name = name
+  constructor({
+    id = null,
+    firstName = null,
+    lastName = null,
+    username = null,
+    email = null,
+    password = null,
+    phoneNumber = null,
+    createdAt = null,
+    updatedAt = null,
+    deletedAt = null,
+    hash = true,
+  }) {
+    // Required
+    this.firstName = firstName
+    this.lastName = lastName
+    this.username = username
     this.email = email
     this.password = !password ? null : hash ? hashPassword(password) : password
+
+    // Optional with default values
+    id ? (this.id = id) : null
+    this.phoneNumber = phoneNumber
+    this.createdAt = createdAt
+    this.updatedAt = updatedAt
+    this.deletedAt = deletedAt
   }
 
   async save() {
-    await User.create({ ...this })
-    return { message: 'Created user' }
+    try {
+      await User.create({ ...this })
+      return
+    } catch (error) {
+      return error.errors
+    }
   }
 
   async comparePassword(password) {
     return comparePassword(password, this.password)
+  }
+
+  hidePassword() {
+    delete this.password
   }
 
   static async emailExist(email, id = null) {
@@ -40,18 +70,26 @@ class UserClass {
   }
 
   static async viewById(id) {
-    return await User.findByPk(id, {
-      attributes: {
-        exclude: ['password'],
-      },
-    })
+    try {
+      return await User.findByPk(id, {
+        attributes: {
+          exclude: ['password'],
+        },
+      })
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   static async update(id, data) {
-    const user = await this.viewById(id)
-    if (data.password) data.password = hashPassword(data.password)
-    await user.update(data, { where: { id } })
-    return { message: 'Updated user' }
+    try {
+      const user = await this.viewById(id)
+      if (data.password) data.password = hashPassword(data.password)
+      await user.update(data, { where: { id } })
+      return
+    } catch (error) {
+      return error.errors
+    }
   }
 
   static async delete(id) {
@@ -72,9 +110,16 @@ class UserClass {
 
     const userObj = new UserClass({
       id: user.id,
-      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
       email: user.email,
       password: user.password,
+      phoneNumber: user.phoneNumber,
+      points: user.points,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      deletedAt: user.deletedAt,
       hash: false,
     })
     return userObj

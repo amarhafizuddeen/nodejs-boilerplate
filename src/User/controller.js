@@ -6,18 +6,11 @@
 const User = require('./model')
 
 module.exports = {
-  createUser: async (req, res, next) => {
+  registerUser: async (req, res, next) => {
     try {
-      const { name, email, password } = req.body
-
-      if (!name || !email || !password)
-        throw new ValidationError('Missing required fields', 'field error')
-
-      if (await User.emailExist(email))
-        throw new DuplicateEmailError('Email unavailable', 'email error')
-
-      const user = new User({ ...req.body, hash: true })
-      await user.save()
+      const user = new User({ ...req.body })
+      const errors = await user.save()
+      if (errors) throw new DatabaseError(errors, 'database validation error')
       return res.sendStatus(200)
     } catch (error) {
       next(error)
@@ -50,16 +43,33 @@ module.exports = {
     user.hidePassword()
     return res.send(user)
   },
-  updateUser: async (req, res, next) => {
-    if (req.body.email && (await User.emailExist(req.body.email, req.params.id))) {
-      return res.status(400).send('Email unavailable')
+  aboutme: async (req, res) => {
+    const user = await User.find(req.decoded.id)
+    if (!user) return res.sendStatus(404)
+    user.hidePassword()
+    return res.send(user)
+  },
+  updateProfile: async (req, res, next) => {
+    try {
+      const errors = await User.update(req.decoded.id, req.body)
+      if (errors) throw new DatabaseError(errors, 'database validation error')
+      return res.sendStatus(200)
+    } catch (error) {
+      next(error)
     }
-
-    await User.update(req.params.id, req.body)
-    return res.sendStatus(200)
+  },
+  updateUser: async (req, res, next) => {
+    try {
+      const errors = await User.update(req.params.id, req.body)
+      if (errors) throw new DatabaseError(errors, 'database validation error')
+      return res.sendStatus(200)
+    } catch (error) {
+      next(error)
+    }
   },
   deleteUser: async (req, res, next) => {
-    await User.delete(req.params.id)
+    const deleted = await User.delete(req.params.id)
+    if (!deleted) return res.sendStatus(404)
     return res.sendStatus(200)
   },
 }

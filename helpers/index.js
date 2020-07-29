@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const config = require('../config')[process.env.ENV]
+const ADMIN_ROLES = ['general', 'super', 'finance', 'sales']
 
 const _ = {}
 
@@ -15,7 +16,7 @@ _.comparePassword = (password, hash) => {
 
 _.getJWT = (payload) => {
   return jwt.sign(payload, config.PRIVATE_KEY, {
-    expiresIn: payload.type === 'admin' ? '12h' : '30d',
+    expiresIn: ADMIN_ROLES.includes(payload.type) ? '12h' : '30d',
   })
 }
 
